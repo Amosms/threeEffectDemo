@@ -84,16 +84,9 @@ const createBox = () => {
      void main(){
       //texture2D()获取纹素
       // gl_FragColor = texture2D(texture1, vvv);
-      // gl_FragColor = texture2D(texture1, vec2(fract(vvv.x + iTime * speed), vvv.y));
-      float v1 = smoothstep(0., 0.5, fract(vvv.x));
-      float v2 = smoothstep(0., 0.5, fract(vvv.y));
-      float w = 1.;
-      if (v1 == 1. || v2 == 1.) {
-        w = 0.;
-      }
-      vec4 color = texture2D(texture1, vec2(v1, v2));
-
-      gl_FragColor = vec4(color.x, color.y, color.z, 0.);
+      vec4 col = texture2D(texture1, vec2(fract(vvv.x + iTime * speed), vvv.y));
+      col.rgb *= 3.;
+      gl_FragColor = col;
      }
      `,
     side:THREE.DoubleSide,

@@ -59,13 +59,13 @@ const createBox = () => {
   //配置shaderMaterial中的uniforms属性
   console.log('scene.time', scene.time)
   var uniforms = {
-    texture1 : {value : textureLoader.load('img/negx.jpg')},
+    texture1 : {value : textureLoader.load('img/xunjianluxiantuAA.png')},
     iTime: scene.time,
     speed: {value: 0.5}
   };
-  //设置平铺方式
-  uniforms.texture1.value.warpS = uniforms.texture1.value.warpT = THREE.RepeatWrapping;
-  uniforms.texture1.value.repeat.set(1,1)
+  uniforms.texture1.value.wrapT = THREE.RepeatWrapping
+  uniforms.texture1.value.wrapS = THREE.RepeatWrapping
+      //设置平铺方式
   shaderMaterial = new THREE.ShaderMaterial({
     uniforms: uniforms,
     vertexShader: `
@@ -76,16 +76,25 @@ const createBox = () => {
      }`,
     fragmentShader: `
      //纹理坐标
+     #define PI 3.1415
      varying vec2 vvv;
      //获取纹理
      uniform sampler2D texture1;
      uniform float iTime;
      uniform float speed;
+
+     vec2 rotate(vec2 r, float angle){
+        vec2 q;
+        q.x =   cos(angle)*r.x + sin(angle)*r.y;
+        q.y = - sin(angle)*r.x + cos(angle)*r.y;
+        return q;
+     }
      void main(){
       //texture2D()获取纹素
       // gl_FragColor = texture2D(texture1, vvv);
-      vec4 col = texture2D(texture1, vec2(fract(vvv.x + iTime * speed), vvv.y));
-      col.rgb *= 3.;
+      vec2 uv = vvv;
+      vec2 st = uv*5.;
+      vec4 col = texture2D(texture1, st);
       gl_FragColor = col;
      }
      `,

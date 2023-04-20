@@ -49,7 +49,7 @@ const routes = [
       {
         path: 'shader8',
         name: 'Shader8',
-        component: () => import('./components/ShaderDemo/Shader8/Index.vue'), //SDF练习
+        component: () => import('./components/ShaderDemo/Shader8/Index.vue'), //下雨
       },
       {
         path: 'shader9',

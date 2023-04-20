@@ -1,19 +1,27 @@
 <template>
-  <div id="webGL"></div>
+  <div>
+    <div class="pos">雨</div>
+    <div class="pos">雪</div>
+    <div id="webGL"></div>
+  </div>
+
+
 </template>
-<script setup>
+<script setup lang="ts">
 import { onMounted } from "vue";
 import * as THREE from "three";
 import InitScene from "@/utils/initScene.js";
+import {WeatherRainOptions} from "./constant";
+import {ShaderPass} from "three/examples/jsm/postprocessing/ShaderPass";
+import {rainShader} from "./rainShader";
 let scene,
-  shaderMaterial,
   radius = 1,
-  radius1 = 0,
   speed = 0.1,
-  meshBoundingBox;
+    pass = null;
 onMounted(() => {
   careteScene();
   createBox();
+  createRain();
 });
 
 const careteScene = () => {
@@ -29,50 +37,90 @@ const careteScene = () => {
       "XYZ"
     )
   );
+  scene.scene.background = new THREE.Color(0x000000);
 };
+
+/**
+ * 雨效果后处理
+ * @param options
+ * @returns
+ */
+const rainPass = ( options : WeatherRainOptions ) => {
+  scene.isPostProcessing = true;
+  scene.postProcessing.composer.renderToScreen = true;
+
+  let rainPass = new ShaderPass( rainShader );
+  rainPass.uniforms[ 'iResolution' ].value = new THREE.Vector2( scene.el.clientWidth , scene.el.clientHeight );
+  rainPass.enabled = options.enabled;
+  rainPass.uniforms.angle.value =THREE.MathUtils.degToRad(options.angle);
+  rainPass.uniforms.speed.value = options.speed;
+  rainPass.uniforms.quantity.value = options.quantity;
+  rainPass.uniforms.color.value = new THREE.Color('#ffffff');
+  rainPass.uniforms.iTime = scene.time
+  scene.postProcessing.composer.addPass(rainPass);
+
+  return rainPass;
+}
+
 const createBox = () => {
-  // const geomtery = new THREE.BoxBufferGeometry(50, 50, 50);
+  const geomtery = new THREE.BoxBufferGeometry(80, 80, 80);
   // const geomtery = new THREE.PlaneBufferGeometry(100, 100);
+  geomtery.computeBoundingBox();
+  const meshBoundingBox = geomtery.boundingBox;
 
-  const geomtery = new THREE.PlaneBufferGeometry(40, 10);
-  shaderMaterial = new THREE.ShaderMaterial({
-    transparent: true,
-    uniforms: {
-      iTime: scene.time,
-      iResolution: {
-        value: new THREE.Vector3(100, 100, 1),
-      },
-    },
+  var textureLoader = new THREE.TextureLoader();
+  //配置shaderMaterial中的uniforms属性
+  console.log('scene.time', scene)
+  var uniforms = {
+    texture1 : {value : textureLoader.load('img/negx.jpg')},
+    iTime: scene.time,
+    speed: {value: 0.5}
+  };
+  //设置平铺方式
+  const shaderMaterial = new THREE.ShaderMaterial({
+    uniforms: uniforms,
     vertexShader: `
-        varying vec3 vP;
-        varying vec2 vUv;
-        void main(){
-            vP = position;
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
+     varying vec2 vvv;
+     void main(){
+          vvv = uv;
+          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position,1.0);
+     }`,
     fragmentShader: `
+     //纹理坐标
+     varying vec2 vvv;
+     //获取纹理
+     uniform sampler2D texture1;
      uniform float iTime;
-     varying vec2 vUv;
-     varying vec3 vP;
-     uniform vec2 iResolution;
-    float sdCircle(vec2 p,float r){
-        return length(p)-r;
-      }
-      void main(){
-          float w = 1.0/ min(iResolution.x,iResolution.y);
-          vec2 uv = vUv - 0.5;
-          uv.x *= iResolution.x/iResolution.y;
-          vec3 col = vec3(1.0);
-
-          float c = smoothstep(w,-w,sdCircle(uv,0.1));
-          col = mix(col,vec3(0.0,1.0,1.0),c);
-
-          gl_FragColor = vec4(col,1.0);
-      }`,
+     uniform float speed;
+     void main(){
+      //texture2D()获取纹素
+      // gl_FragColor = texture2D(texture1, vvv);
+      vec4 col = texture2D(texture1, vec2(fract(vvv.x + iTime * speed), vvv.y));
+      gl_FragColor = col;
+     }
+     `,
+    side:THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geomtery, shaderMaterial);
   scene.scene.add(mesh);
 };
+
+const createRain = () => {
+  const rainOption = {
+    "enabled": true,
+    "speed": 0.5,
+    "quantity": 1000,
+    "angle": 60
+  }
+
+  pass = rainPass( rainOption );
+}
 </script>
+<style>
+.pos{
+  position: absolute;
+  display: inline-block;
+  width: 20px;
+  z-index: 99;
+}
+</style>

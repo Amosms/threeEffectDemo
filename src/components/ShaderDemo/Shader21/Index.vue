@@ -13,9 +13,63 @@ let scene,
     meshBoundingBox;
 onMounted(() => {
   careteScene();
-  createBox();
+  loadModel();
   animate();
 });
+
+const loadModel = () => {
+  scene.loadFbx("model/xun_jian_lu_xian.fbx").then((m) => {
+    const textureLoader = new THREE.TextureLoader();
+    m.traverse(el => {
+      if (el.isMesh) {
+        console.log(el.material)
+        el.material.onBeforeCompile = shader => {
+          shader.uniforms.texture1 = {value: textureLoader.load('img/xunjianluxiantuAA.png')}
+          shader.uniforms.texture1.value.wrapS = shader.uniforms.texture1.value.wrapT = THREE.RepeatWrapping
+          shader.vertexShader = shader.vertexShader.replace('#include <common>', [
+            '#include <common>',
+            'varying vec2 verUv;'
+          ].join('\n'));
+          shader.vertexShader = shader.vertexShader.replace('#include <fog_vertex>', [
+            '#include <fog_vertex>',
+            'verUv = uv;',
+            'gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position,1.0);',
+          ].join('\n'));
+
+          shader.fragmentShader = shader.fragmentShader.replace(
+              "#include <common>",
+              `
+                #include <common>
+                varying vec2 verUv;
+                uniform sampler2D texture1;
+                vec2 rotate(vec2 r, float angle){
+                    vec2 q;
+                    q.x =   cos(angle)*r.x + sin(angle)*r.y;
+                    q.y = - sin(angle)*r.x + cos(angle)*r.y;
+                    return q;
+                }
+              `
+          );
+          shader.fragmentShader = shader.fragmentShader.replace(
+              "#include <dithering_fragment>",
+              `
+                #include <dithering_fragment>
+                vec2 uv = verUv;
+                uv.y*= 140.;
+                vec2 st = rotate(uv, 0.);
+                vec4 color = texture2D(texture1, st);
+                gl_FragColor = color;
+              `
+          );
+        }
+      }
+    })
+    const axesHelper = new THREE.AxesHelper(1000);
+    m.add(axesHelper)
+    scene.scene.add(m);
+    console.log('m', m)
+  });
+};
 
 const animate = () => {
   requestAnimationFrame(() => {
@@ -71,6 +125,7 @@ const createBox = () => {
      void main(){
           vvv = uv;
           gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position,1.0);
+          transformed.x += 2.0;
      }`,
     fragmentShader: `
      //纹理坐标
@@ -86,17 +141,14 @@ const createBox = () => {
           return q;
       }
      void main(){
-      vec2 uv = vvv;
-      uv *= 5.;
-      uv = rotate(uv, 0.);
-      float v1 = smoothstep(0., 1., fract(uv.x * 0.4));
-      float v2 = smoothstep(0., 0.5, fract(uv.y));
-      vec4 color = texture2D(texture1, vec2(v1, v2));
-      float w = 1.;
-      if (v1 == 1. || v2 == 1.) {
-        w = 0.;
-      }
-      gl_FragColor = vec4(color.x, color.y, color.z, 0.);
+        vec2 uv = vvv;
+        uv *= 5.;
+        uv = rotate(uv, 0.);
+        float v1 = smoothstep(0., 1., fract(uv.x * 0.4));
+        float v2 = smoothstep(0., 0.5, fract(uv.y));
+        vec4 color = texture2D(texture1, vec2(v1, v2));
+
+        gl_FragColor = vec4(color.x, color.y, color.z, 1.);
      }
      `,
     side:THREE.DoubleSide,

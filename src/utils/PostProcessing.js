@@ -367,7 +367,7 @@ export default class PostProcessing {
     this.bloomPass.radius = bloomParams.radius;
   }
 
-  setBloomMesh(mesh) { //发光 
+  setBloomMesh(mesh) { //发光
     mesh.layers.enable(BLOOM_SCENE);
   }
 

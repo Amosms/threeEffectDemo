@@ -22,7 +22,7 @@
                         (scope.row[item.prop] === 4) ? 'four-color' : '',
                         (scope.row[item.prop] === 8) ? 'eight-color' : '',
                         scope.row[item.prop + '_attendance'] === 1 ? '' : 'warn',
-                    
+
                     ]">
                         <span slot="reference" class="show">
                             {{ scope.row[item.prop + '_attendance'] === 1 ? '✔' : '' }}

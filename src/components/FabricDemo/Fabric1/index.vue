@@ -8,8 +8,8 @@
     ></canvas>
   </div>
 </template>
-<script lang="ts">
-console.log("222");
+<script setup>
+console.log("22");
 
 </script>
 <style>

@@ -387,14 +387,14 @@ const routes = [
     ],
   },
   {
-    path: '/fabric',
+    path: '/FabricDemo',
     name: 'FabricDemo',
     component: () => import('./components/FabricDemo/index.vue'),
     children: [
       {
         path: 'fabric1',
         name: 'fabric1',
-        component: () => import('./components/FabricDemo/Fabric1/Index.vue'), //直线+圆弧
+        component: () => import('./components/FabricDemo/Fabric1/index.vue'), //直线+圆弧
       },
     ]
   }

@@ -396,6 +396,11 @@ const routes = [
         name: 'fabric1',
         component: () => import('./components/FabricDemo/Fabric1/index.vue'), //直线+圆弧
       },
+      {
+        path: 'fabric2',
+        name: 'fabric2',
+        component: () => import('./components/FabricDemo/Fabric2/index.vue'), //矩形绘制
+      },
     ]
   }
 ];

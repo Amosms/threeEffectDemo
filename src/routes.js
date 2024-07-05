@@ -387,7 +387,7 @@ const routes = [
     ],
   },
   {
-    path: '/FabricDemo',
+    path: '/fabric',
     name: 'FabricDemo',
     component: () => import('./components/FabricDemo/index.vue'),
     children: [
